@@ -1,11 +1,15 @@
 import React from 'react';
+import { Button } from 'antd-mobile';
+import { withRouter } from 'react-router-dom';
+import './home.css';
 
-export default class Home extends React.Component {
-    render(){
-        return (
-            <div>
-                <button onClick={() => this.props.history.push('/detail')}>回到Detail</button>
-            </div>
-        )
-    }
+
+function Home(props) {
+  return (
+    <div className="header-wrapper">
+      <Button type="primary" onClick={() => props.history.push('/detail')}>回到Detail</Button>
+    </div>
+  );
 }
+
+export default withRouter((Home));
