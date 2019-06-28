@@ -1,6 +1,9 @@
-import React from 'react';
-import { TabBar, ListView } from 'antd-mobile';
+import React, {
+  useState, useEffect, useRef, useCallback,
+} from 'react';
+import { ListView } from 'antd-mobile';
 import ReactDOM from 'react-dom';
+import './index.css';
 
 const data = [
   {
@@ -44,278 +47,121 @@ function genData(pIndex = 0) {
   rowIDs = [...rowIDs];
 }
 
-class ListViewExample extends React.Component {
-  constructor(props) {
-    super(props);
-    const getSectionData = (dataBlob, sectionID) => dataBlob[sectionID];
-    const getRowData = (dataBlob, sectionID, rowID) => dataBlob[rowID];
+function ListViewExample() {
+  const getSectionData = (dataBlob, sectionID) => dataBlob[sectionID];
+  const getRowData = (dataBlob, sectionID, rowID) => dataBlob[rowID];
 
-    const dataSource = new ListView.DataSource({
-      getRowData,
-      getSectionHeaderData: getSectionData,
-      rowHasChanged: (row1, row2) => row1 !== row2,
-      sectionHeaderHasChanged: (s1, s2) => s1 !== s2,
-    });
+  const dataSource1 = new ListView.DataSource({
+    getRowData,
+    getSectionHeaderData: getSectionData,
+    rowHasChanged: (row1, row2) => row1 !== row2,
+    sectionHeaderHasChanged: (s1, s2) => s1 !== s2,
+  });
+  const [dataSource, setDataSource] = useState(dataSource1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [height, setHeight] = useState((document.documentElement.clientHeight * 3) / 4);
+  const [hasMore] = useState(true);
 
-    this.state = {
-      dataSource,
-      isLoading: true,
-      height: (document.documentElement.clientHeight * 3) / 4,
-    };
-  }
+  const lv = useRef();
 
-  componentDidMount() {
-    const { dataSource } = this.state;
-    const hei = document.documentElement.clientHeight
-    // eslint-disable-next-line react/no-find-dom-node
-    - ReactDOM.findDOMNode(this.lv).parentNode.offsetTop;
-    setTimeout(() => {
-      genData();
-      this.setState({
-        dataSource: dataSource.cloneWithRowsAndSections(dataBlobs, sectionIDs, rowIDs),
-        isLoading: false,
-        height: hei,
-      });
-    }, 600);
-  }
+  const initData = useCallback(
+    () => {
+      const hei = document.documentElement.clientHeight
+      // eslint-disable-next-line react/no-find-dom-node
+      - ReactDOM.findDOMNode(lv.current).parentNode.offsetTop;
+      console.log(sectionIDs);
+      console.log(rowIDs);
+      setTimeout(() => {
+        genData();
+        setDataSource(dataSource.cloneWithRowsAndSections(dataBlobs, sectionIDs, rowIDs));
+        setIsLoading(false);
+        setHeight(hei);
+      }, 600);
+    },
+    [dataSource],
+  );
 
-  onEndReached = (event) => {
-    if (this.state.isLoading && !this.state.hasMore) {
+  useEffect(() => {
+    initData();
+  }, [initData]);
+
+  const onEndReached = () => {
+    if (isLoading && !hasMore) {
       return;
     }
-    console.log('reach end', event);
-    const { dataSource } = this.state;
-    this.setState({ isLoading: true });
+    setIsLoading(true);
     setTimeout(() => {
       genData(pageIndex += 1);
-      this.setState({
-        dataSource: dataSource.cloneWithRowsAndSections(dataBlobs, sectionIDs, rowIDs),
-        isLoading: false,
-      });
+      setDataSource(dataSource.cloneWithRowsAndSections(dataBlobs, sectionIDs, rowIDs));
+      setIsLoading(false);
     }, 1000);
-  }
+  };
 
-  render() {
-    const separator = (sectionID, rowID) => (
-      <div
-        key={`${sectionID}-${rowID}`}
-        style={{
-          backgroundColor: '#F5F5F9',
-          height: 8,
-          borderTop: '1px solid #ECECED',
-          borderBottom: '1px solid #ECECED',
-        }}
-      />
-    );
-    let index = data.length - 1;
-    const row = (rowData, sectionID, rowID) => {
-      if (index < 0) {
-        index = data.length - 1;
-      }
-      const obj = data[index -= 1];
-      return (
-        <div key={rowID} style={{ padding: '0 15px' }}>
-          <div
-            style={{
-              lineHeight: '50px',
-              color: '#888',
-              fontSize: 18,
-              borderBottom: '1px solid #F6F6F6',
-            }}
-          >{obj.title}
-          </div>
-          <div style={{ display: 'flex', padding: '15px 0' }}>
-            <img style={{ height: '64px', marginRight: '15px' }} src={obj.img} alt="" />
-            <div style={{ lineHeight: 1 }}>
-              <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{obj.des}</div>
-              <div><span style={{ fontSize: '30px', color: '#FF6E27' }}>35</span>¥ {rowID}</div>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    return (
-      <ListView
-        ref={(el) => { this.lv = el; }}
-        dataSource={this.state.dataSource}
-        renderHeader={() => <span>header</span>}
-        renderFooter={() => (
-          <div style={{ padding: 30, textAlign: 'center' }}>
-            {this.state.isLoading ? 'Loading...' : 'Loaded'}
-          </div>)}
-        renderSectionHeader={sectionData => (
-          <div>{`Task ${sectionData.split(' ')[1]}`}</div>
-        )}
-        renderRow={row}
-        renderSeparator={separator}
-        style={{
-          height: this.state.height,
-          overflow: 'auto',
-        }}
-        pageSize={4}
-        onScroll={() => { console.log('scroll'); }}
-        scrollRenderAheadDistance={500}
-        onEndReached={this.onEndReached}
-        onEndReachedThreshold={10}
-      />
-    );
-  }
-}
-
-// eslint-disable-next-line react/no-multi-comp
-class TabBarExample extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedTab: 'blueTab',
-      hidden: false,
-    };
-  }
-
-  renderContent(pageText) {
-    const { hidden } = this.state;
-    return (
-      <div style={{ backgroundColor: 'white', height: '100%', textAlign: 'center' }}>
-        <div style={{ paddingTop: 60 }}>
-        Clicked “{pageText}” tab， show “{pageText}” information
-        </div>
-        <a
-          style={{
-            display: 'block', marginTop: 40, marginBottom: 20, color: '#108ee9',
-          }}
-          onClick={(e) => {
-            e.preventDefault();
-            this.setState({
-              hidden: !hidden,
-            });
-          }}
-        >
-          Click to show/hide tab-bar
-        </a>
-      </div>
-    );
-  }
-
-  render() {
-    return (
-      <div style={{
-        position: 'fixed', height: '100%', width: '100%', top: 0,
+  const separator = (sectionID, rowID) => (
+    <div
+      key={`${sectionID}-${rowID}`}
+      style={{
+        backgroundColor: '#F5F5F9',
+        height: 8,
+        borderTop: '1px solid #ECECED',
+        borderBottom: '1px solid #ECECED',
       }}
-      >
-        <TabBar
-          unselectedTintColor="#949494"
-          tintColor="#33A3F4"
-          barTintColor="white"
-          tabBarPosition="bottom"
-          hidden={this.state.hidden}
-          prerenderingSiblingsNumber={0}
-        >
-          <TabBar.Item
-            title="Life"
-            key="Life"
-            icon={<div style={{
-              width: '22px',
-              height: '22px',
-              background: 'url(https://zos.alipayobjects.com/rmsportal/sifuoDUQdAFKAVcFGROC.svg) center center /  21px 21px no-repeat',
-            }}
-            />
-            }
-            selectedIcon={<div style={{
-              width: '22px',
-              height: '22px',
-              background: 'url(https://zos.alipayobjects.com/rmsportal/iSrlOTqrKddqbOmlvUfq.svg) center center /  21px 21px no-repeat',
-            }}
-            />
-            }
-            selected={this.state.selectedTab === 'blueTab'}
-            badge={1}
-            onPress={() => {
-              this.setState({
-                selectedTab: 'blueTab',
-              });
-            }}
-            data-seed="logId"
-          >
-            <ListViewExample />
-          </TabBar.Item>
-          <TabBar.Item
-            icon={
-              <div style={{
-                width: '22px',
-                height: '22px',
-                background: 'url(https://gw.alipayobjects.com/zos/rmsportal/BTSsmHkPsQSPTktcXyTV.svg) center center /  21px 21px no-repeat',
-              }}
-              />
-            }
-            selectedIcon={
-              <div style={{
-                width: '22px',
-                height: '22px',
-                background: 'url(https://gw.alipayobjects.com/zos/rmsportal/ekLecvKBnRazVLXbWOnE.svg) center center /  21px 21px no-repeat',
-              }}
-              />
-            }
-            title="Koubei"
-            key="Koubei"
-            badge="new"
-            selected={this.state.selectedTab === 'redTab'}
-            onPress={() => {
-              this.setState({
-                selectedTab: 'redTab',
-              });
-            }}
-            data-seed="logId1"
-          >
-            {this.renderContent('Koubei')}
-          </TabBar.Item>
-          <TabBar.Item
-            icon={
-              <div style={{
-                width: '22px',
-                height: '22px',
-                background: 'url(https://zos.alipayobjects.com/rmsportal/psUFoAMjkCcjqtUCNPxB.svg) center center /  21px 21px no-repeat',
-              }}
-              />
-            }
-            selectedIcon={
-              <div style={{
-                width: '22px',
-                height: '22px',
-                background: 'url(https://zos.alipayobjects.com/rmsportal/IIRLrXXrFAhXVdhMWgUI.svg) center center /  21px 21px no-repeat',
-              }}
-              />
-            }
-            title="Friend"
-            key="Friend"
-            dot
-            selected={this.state.selectedTab === 'greenTab'}
-            onPress={() => {
-              this.setState({
-                selectedTab: 'greenTab',
-              });
-            }}
-          >
-            {this.renderContent('Friend')}
-          </TabBar.Item>
-          <TabBar.Item
-            icon={{ uri: 'https://zos.alipayobjects.com/rmsportal/asJMfBrNqpMMlVpeInPQ.svg' }}
-            selectedIcon={{ uri: 'https://zos.alipayobjects.com/rmsportal/gjpzzcrPMkhfEqgbYvmN.svg' }}
-            title="My"
-            key="my"
-            selected={this.state.selectedTab === 'yellowTab'}
-            onPress={() => {
-              this.setState({
-                selectedTab: 'yellowTab',
-              });
-            }}
-          >
-            {this.renderContent('My')}
-          </TabBar.Item>
-        </TabBar>
+    />
+  );
+  let index = data.length - 1;
+  const row = (rowData, sectionID, rowID) => {
+    if (index < 0) {
+      index = data.length - 1;
+    }
+    const obj = data[index];
+    index -= 1;
+    return (
+      <div key={rowID} style={{ padding: '0 15px' }}>
+        <div
+          style={{
+            lineHeight: '50px',
+            color: '#888',
+            fontSize: 18,
+            borderBottom: '1px solid #F6F6F6',
+          }}
+        >{obj.title}
+        </div>
+        <div style={{ display: 'flex', padding: '15px 0' }}>
+          <img style={{ height: '64px', marginRight: '15px' }} src={obj.img} alt="" />
+          <div style={{ lineHeight: 1 }}>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{obj.des}</div>
+            <div><span style={{ fontSize: '30px', color: '#FF6E27' }}>35</span>¥ {rowID}</div>
+          </div>
+        </div>
       </div>
     );
-  }
+  };
+
+  return (
+    <ListView
+      ref={lv}
+      dataSource={dataSource}
+      renderHeader={() => <span>header</span>}
+      renderFooter={() => (
+        <div style={{ padding: 30, textAlign: 'center' }}>
+          {isLoading ? 'Loading...' : 'Loaded'}
+        </div>)}
+      renderSectionHeader={sectionData => (
+        <div>{`Task ${sectionData.split(' ')[1]}`}</div>
+      )}
+      renderRow={row}
+      renderSeparator={separator}
+      style={{
+        height,
+        overflow: 'auto',
+      }}
+      pageSize={4}
+      onScroll={() => { console.log('scroll'); }}
+      scrollRenderAheadDistance={500}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={10}
+    />
+  );
 }
 
-export default TabBarExample;
+export default ListViewExample;

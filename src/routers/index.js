@@ -6,7 +6,7 @@ import {
 } from 'react-router-dom';
 import Detail from '../components/detail';
 import Home from '../components/home';
-import Index from '../components/Home/index';
+import Index from '../components/Layout/index';
 
 
 const BasicRoute = () => (
@@ -14,7 +14,7 @@ const BasicRoute = () => (
     <Switch>
       <Route exact path="/" component={Home} />
       <Route exact path="/detail" component={Detail} />
-      <Route exact path="/home" component={Index} />
+      <Route exact path="/index" component={Index} />
     </Switch>
   </HashRouter>
 );
