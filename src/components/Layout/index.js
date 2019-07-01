@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { TabBar } from 'antd-mobile';
 import './index.css';
-import ListViewExample from '../Home/index';
+import ListViewExample from '../Test/index';
+import HomePage from '../Home/index';
 
 function TabBarExample() {
   const [selectedTab, setSelectedTab] = useState('blueTab');
@@ -66,7 +67,7 @@ function TabBarExample() {
           }}
           data-seed="logId"
         >
-          <ListViewExample />
+          <HomePage />
         </TabBar.Item>
         <TabBar.Item
           icon={
@@ -94,7 +95,7 @@ function TabBarExample() {
           }}
           data-seed="logId1"
         >
-          {renderContent('Koubei')}
+          <ListViewExample />
         </TabBar.Item>
         <TabBar.Item
           icon={

@@ -1,0 +1,15 @@
+.ant-tabs-ink-bar{
+    background-color: transparent !important;
+  }
+  
+  .ant-tabs-top .ant-tabs-ink-bar-animated:before{
+    content: " ";
+    background-color: red;
+    width: 50px;
+    height: 2px;
+    position: absolute;
+    margin: auto;
+    margin-left: 25%;
+  
+  
+  }

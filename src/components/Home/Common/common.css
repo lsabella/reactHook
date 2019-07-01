@@ -1,0 +1,10 @@
+.search-static-div{
+    height: 30px;
+    justify-content: center;
+    text-align: center;
+    background-color: #0001;
+    align-items: center;
+    display: flex;
+    margin: 0 10px;
+    border-radius: 100px;
+  }
